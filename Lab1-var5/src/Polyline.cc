@@ -3,7 +3,8 @@
 #include <complex>
 #include <stdexcept>
 #include <ctime>
-
+#include <vector>
+#define M_PI 3.14159265358979323846
 
 using namespace std;
 
@@ -27,6 +28,9 @@ struct Point {
     }
     void set_y(T newY) {
         y = newY;
+    }
+    bool operator==(const Point<T>& point) {
+        return (this->x == point.x) && (this->y == point.y);
     }
 };
 
@@ -54,32 +58,34 @@ public:
     }
     
     Polyline(const int& _size, const T& m1, const T& m2) : size(0),points(nullptr) {
-        if (_size > 0){
+        if (_size > 0) {
             size = _size;
             points = new Point<T>[size];
             srand(static_cast<unsigned>(time(nullptr)));
             Point<T> temp;
-            for (int i = 0; i < size; ++i){
+            for (int i = 0; i < size; ++i) {
                 temp.set_x(static_cast<T>(m1 + rand() / (RAND_MAX / (m2 - m1 + 1.0))));
                 temp.set_y(static_cast<T>(m1 + rand() / (RAND_MAX / (m2 - m1 + 1.0))));
-                points[i] = temp;
+                if (!contains(temp)) {
+                    points[i] = temp;
+                }
+                else{
+                    i--;
+                }
             }
         }
     }
-
-    ~Polyline() {
-        delete[] points;
-    }
     void add(const Point<T>& point) {
-        Point<T>* newElements = new Point<T>[size + 1];
-        for (int i = 0; i < size; ++i)
-        {
-            newElements[i] = points[i];
+        if (!contains(point)){
+            Point<T>* newElements = new Point<T>[size + 1];
+            for (int i = 0; i < size; ++i){
+                newElements[i] = points[i];
+            }
+            newElements[size] = point;
+            delete[] points;
+            points = newElements;
+            size += 1;
         }
-        newElements[size] = point;
-        delete[] points;
-        points = newElements;
-        size += 1;
     }
     Point<T>& operator[](const int& index) {
         if (index < 0 || index >= size) throw std::out_of_range("Index out of range");
@@ -98,13 +104,14 @@ public:
         return res;
     }
 
-    Polyline<T>& operator+(const Point<T>& point) {
+    //оператор добавлени€ точки в конец ломаной
+    Polyline<T>& operator-(const Point<T>& point) { //за абуз не бейте
         Polyline<T> res(*this);
         res.add(point);
         return res;
     }
  
-   /* Polyline<T>& operator+(const Point<T>& point) {
+    Polyline<T>& operator+(const Point<T>& point) {
         Polyline<T> res(size + 1);
         for (int i = 0; i < size; ++i) {
             res.points[i + 1].x = points[i].x;
@@ -112,7 +119,7 @@ public:
         }
         res.points[0] = point;
         return res;
-    }*/
+    }
 
     double length() const {
         double length = 0;
@@ -124,8 +131,37 @@ public:
         return length;
     }
 
-    
-    
-    
-    
+    bool contains(const Point<T>& point) const
+    {
+        for (int i = 0; i < size; ++i)
+        {
+            if (points[i] == point)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    void createRegularPolygon(int _size, T radius) {
+        if (_size <= 2) {
+            throw out_of_range("_size should be greater than 2");
+        }
+        else {
+            delete[] points;
+            size = 0;
+            points = new Point<T>[_size];
+            double angle = 2 * M_PI / _size;  // ”гол между вершинами
+            T centerX = static_cast<T>(0);  //  оординаты центра
+            T centerY = static_cast<T>(0);
+
+            for (int i = 0; i < _size; i++) {
+                // –ассчитываем координаты точки на окружности
+                T x = centerX + radius * cos(i * angle);
+                T y = centerY + radius * sin(i * angle);
+
+                // ƒобавл€ем точку в ломаную
+                add(Point<T>(x, y));
+            }
+        }
+    }
 };

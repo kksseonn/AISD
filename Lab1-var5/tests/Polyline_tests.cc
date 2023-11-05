@@ -5,6 +5,8 @@
 #include <complex>
 #include <stdexcept>
 #include <random>
+#include <cmath>
+#include <vector>
 
 // 1
 TEST(PointTest, ConstructorsTest) {
@@ -87,10 +89,15 @@ TEST(PolylineTest, OperatorsTest) {
     EXPECT_EQ(polyline3.Size(), 2);
 
     Point<int> p3(6, 7);
-    Polyline<int> polyline4 = polyline3 + p3;
+    Polyline<int> polyline4 = polyline3 - p3;
     EXPECT_EQ(polyline4.Size(), 3);
     EXPECT_EQ(polyline4[2].get_x(), 6);
     EXPECT_EQ(polyline4[2].get_y(), 7);
+
+    Polyline<int> polyline5 = polyline3 + p3;
+    EXPECT_EQ(polyline5.Size(), 3);
+    EXPECT_EQ(polyline5[0].get_x(), 6);
+    EXPECT_EQ(polyline5[0].get_y(), 7);
 }
 //5
 TEST(PolylineTest, LenghtTest) {
@@ -102,4 +109,18 @@ TEST(PolylineTest, LenghtTest) {
     polyline.add(p2);
     polyline.add(p3);
     EXPECT_NEAR(polyline.length(), 2.83, 0.2);
+}
+
+TEST(PolylineTest, createRegularPolygonTest) {
+    Polyline<double> polyline;
+    polyline.createRegularPolygon(4, 2.0);  
+    EXPECT_EQ(polyline.Size(), 4); 
+    EXPECT_NEAR(polyline[0].get_x(), 2.0, 0.01);
+    EXPECT_NEAR(polyline[0].get_y(), 0.0, 0.01);
+    EXPECT_NEAR(polyline[1].get_x(), 0.0, 0.01);
+    EXPECT_NEAR(polyline[1].get_y(), 2.0, 0.01);
+    EXPECT_NEAR(polyline[2].get_x(), -2.0, 0.01);
+    EXPECT_NEAR(polyline[2].get_y(), 0.0, 0.01);
+    EXPECT_NEAR(polyline[3].get_x(), 0.0, 0.01);
+    EXPECT_NEAR(polyline[3].get_y(), -2.0, 0.01);
 }
