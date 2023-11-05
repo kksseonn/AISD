@@ -1,13 +1,15 @@
 cmake_minimum_required(VERSION 3.11)
 
-project(Polyline CXX)
+project(polyline CXX)
 
 set(CMAKE_CXX_STANDARD 23)
+
+# РЎРїРµС†РёС„РёС‡РЅС‹Рµ РЅР°СЃС‚СЂРѕР№РєРё РґР»СЏ РєРѕРјРїРёР»СЏС‚РѕСЂР° Visual Studio
 if(MSVC)
-    # Генерируем статическую заглушку для динамических библиотек
+    # Р“РµРЅРµСЂРёСЂСѓРµРј СЃС‚Р°С‚РёС‡РµСЃРєСѓСЋ Р·Р°РіР»СѓС€РєСѓ РґР»СЏ РґРёРЅР°РјРёС‡РµСЃРєРёС… Р±РёР±Р»РёРѕС‚РµРє
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS true)
 
-    # Включаем высокий уровень предупреждений
+    # Р’РєР»СЋС‡Р°РµРј РІС‹СЃРѕРєРёР№ СѓСЂРѕРІРµРЅСЊ РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёР№
     if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
         string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     else()
@@ -15,16 +17,17 @@ if(MSVC)
     endif()
 endif()
 
-# Объявляем библиотеку
-add_library(Polyline SHARED "include/Polyline/Polyline.h" "src/Polyline.cc")
-target_include_directories(Polyline PUBLIC "include")
+# РћР±СЉСЏРІР»СЏРµРј Р±РёР±Р»РёРѕС‚РµРєСѓ
+add_library(polyline SHARED "include/polyline/polyline.h" "src/polyline.cc")
+target_include_directories(polyline PUBLIC "include")
 
-# Подключаем googletest
+# РџРѕРґРєР»СЋС‡Р°РµРј googletest
 include(FetchContent)
 FetchContent_Declare(googletest URL https://github.com/google/googletest/archive/6b63c98ac43efc992122f1da12aaf0a0e0658206.zip)
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-# Объявляем тесты
-add_executable(Polyline_tests "tests/Polyline_tests.cc")
-target_link_libraries(Polyline_tests Polyline GTest::gtest_main)
+# РћР±СЉСЏРІР»СЏРµРј С‚РµСЃС‚С‹
+add_executable(polyline_tests "tests/polyline_tests.cc")
+target_link_libraries(polyline_tests polyline GTest::gtest_main)
+
