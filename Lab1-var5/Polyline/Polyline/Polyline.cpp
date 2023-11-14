@@ -80,6 +80,7 @@ public:
 		size = newSize;
 		return *this;
 	}
+	//оператор добавляет точку в начало массива
 	Polyline<T>& operator-(const Point<T>& point) {
 		Point<T>* newPoints = new Point<T>[size + 1];
 		newPoints[0] = point;
@@ -111,9 +112,7 @@ public:
 			T dy = points[i + 1].y - points[i].y;
 
 			double segmentLength;
-
 			segmentLength = sqrt(static_cast<double>(dx * dx + dy * dy));
-
 			totalLength += segmentLength;
 		}
 		return totalLength;
@@ -201,6 +200,7 @@ public:
 		size = newSize;
 		return *this;
 	}
+	//оператор добавляет точку в начало массива
 	Polyline<complex<T>>& operator-(const Point<complex<T>>& point) {
 		Point<complex<T>>* newPoints = new Point<complex<T>>[size + 1];
 		newPoints[0] = point;
@@ -252,37 +252,32 @@ public:
 template<typename T>
 void createRegularPolygon(int size, Point<T>* points) {
 	if (size <= 2) {
-		throw std::out_of_range("_size should be greater than 2");
+		throw std::out_of_range("size should be greater than 2");
 	}
 	else {
 		const T radius = 2;
-		const T centerX = 0;
-		const T centerY = 0;
 		for (int i = 0; i < size; i++) {
-			points[i].x = centerX + radius * cos(2 * PI * i / size);
-			points[i].y = centerY + radius * sin(2 * PI * i / size);
+			points[i].x = radius * cos(2 * PI * i / size);
+			points[i].y = radius * sin(2 * PI * i / size);
 		}
 	}
 }
 
-//
-//template<typename T>
-//void createRegularPolygon(int size, Point<complex<T>>* points) {
-//	if (size <= 2) {
-//		throw std::out_of_range("_size should be greater than 2");
-//	}
-//	else {
-	//	
-	//
-	//	for (int i = 0; i < N; ++i) {
-	//		T x = real(center) + radius * cos(2 * PI * i / N);
-	//		T y = imag(center) + radius * sin(2 * PI * i / N);
-	//		Point<complex<T>> p(complex<T>(x, y));
-	//		polyline.add(p);
-	//	}
-	// 
-//	return polyline;
-//}
+template<typename T>
+void createRegularPolygon(int size, Point<complex<T>>* points) {
+	if (size <= 2) {
+		throw std::out_of_range("size should be greater than 2");
+	}
+	else {
+		const T radius = 2;
+		for (int i = 0; i < size; i++) {
+			points[i].x = radius * cos(2 * PI * i / size);
+			points[i].y = radius * sin(2 * PI * i / size);
+		}
+	}
+}
+
+
 
 int main() {
 	
@@ -333,7 +328,7 @@ int main() {
 	createRegularPolygon(4, points);
 	cout << "Coordinates of the regular polygon: " << endl;
 	for (int i = 0; i < 4; i++) {
-		std::cout << points[i] << " ";
+		cout << points[i] << " ";
 	}
 	cout << "\n----------------------------------------------------" << endl;
 	
@@ -373,6 +368,13 @@ int main() {
 	cout << "combined_polyline_complex_poly_length: " << endl;
 	cout << combined_polyline_complex_poly_length << endl;
 
+	// Создание правильного многоугольника
+	Point<complex<float>>* complex_points = new Point<complex<float>>[4];
+	createRegularPolygon(4, complex_points);
+	cout << "Coordinates of the regular polygon for complex: " << endl;
+	for (int i = 0; i < 4; i++) {
+		cout << points[i] << " ";
+	}
 	return 0;
 }
 
