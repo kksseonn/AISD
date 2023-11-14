@@ -14,7 +14,6 @@ struct Point {
 	T y;
 	Point() : x(0), y(0) {}
 	Point(T _x, T _y) : x(_x), y(_y) {}
-	Point(complex<T> _x, complex<T> _y) : x(_x), y(_y) {}
 	friend ostream& operator<<(ostream& os, const Point<T>& point) {
 		os << "(" << point.x << ", " << point.y << ") ";
 		return os;
@@ -26,20 +25,99 @@ class Polyline {
 	Point<T>* points;
 	int size;
 public:
-	Polyline();
-	Polyline(int _size);
-	Polyline(Polyline<T>& other);
-	Polyline(int _size, const T& m1, const T& m2);
-	~Polyline();
+	Polyline() : points(nullptr), size(0) {}
+	Polyline(int _size) : size(_size) {
+		points = new Point<T>[size];
+	}
+	Polyline(Polyline<T>& other) {
+		size = other.size;
+		points = new Point<T>[size];
+		for (int i = 0; i < size; ++i)
+		{
+			points[i] = other[i];
+		}
+	}
+	Polyline(int _size, const T& m1, const T& m2) : size(_size) {
+		points = new Point<T>[size];
+		random_device rd;
+		mt19937 gen(rd());
+		uniform_int_distribution<T> distrib(m1, m2);
+		for (int i = 0; i < size; i++) {
+			T randomX = distrib(gen);
+			T randomY = distrib(gen);
+			points[i] = Point<T>(randomX, randomY);
+		}
+	}
+	~Polyline() {
+		delete[] points;
+	}
 
-	void add(const Point<T>& point);
+	void add(const Point<T>& point) {
+		Point<T>* newElements = new Point<T>[size + 1];
+		for (int i = 0; i < size; ++i) {
+			newElements[i] = points[i];
+		}
+		newElements[size] = point;
+		delete[] points;
+		points = newElements;
+		size += 1;
+	}
 
-	Point<T>& operator[](const int& index);
-	Polyline<T>& operator+(const Polyline<T>& other);
-	Polyline<T>& operator-(const Point<T>& point);
-	Polyline<T>& operator+(const Point<T>& point);
+	Point<T>& operator[](const int& index) {
+		return points[index];
+	}
+	Polyline<T>& operator+(const Polyline<T>& other) {
+		int newSize = size + other.size;
+		Point<T>* newPoints = new Point<T>[newSize];
+		for (int i = 0; i < size; i++) {
+			newPoints[i] = points[i];
+		}
+		for (int i = 0; i < other.size; i++) {
+			newPoints[size + i] = other.points[i];
+		}
+		delete[] points;
+		points = newPoints;
+		size = newSize;
+		return *this;
+	}
+	Polyline<T>& operator-(const Point<T>& point) {
+		Point<T>* newPoints = new Point<T>[size + 1];
+		newPoints[0] = point;
+		for (int i = 0; i < size; i++) {
+			newPoints[i + 1] = points[i];
+		}
+		delete[] points;
+		points = newPoints;
+		size++;
+		return *this;
+	}
+	Polyline<T>& operator+(const Point<T>& point) {
+		Point<T>* newPoints = new Point<T>[size + 1];
+		for (int i = 0; i < size; i++) {
+			newPoints[i] = points[i];
+		}
+		newPoints[size] = point;
+		delete[] points;
+		points = newPoints;
+		size++;
+		return *this;
+	}
 
-	double length() const;
+	double length() const {
+		double totalLength = 0.0;
+		for (int i = 0; i < size - 1; i++) {
+			// Расстояние между точками i и i+1
+			T dx = points[i + 1].x - points[i].x;
+			T dy = points[i + 1].y - points[i].y;
+
+			double segmentLength;
+
+			segmentLength = sqrt(static_cast<double>(dx * dx + dy * dy));
+
+			totalLength += segmentLength;
+		}
+		return totalLength;
+	}
 
 	friend ostream& operator<<(ostream& os, const Polyline<T>& polyline) {
 		for (int i = 0; i < polyline.size; i++) {
@@ -53,7 +131,7 @@ template<typename T>
 struct Point<complex<T>> {
 	complex<T> x;
 	complex<T> y;
-	Point() : x(0), y(0) {}
+	Point() : x(0.0), y(0.0) {}
 	Point(complex<T> _x, complex<T> _y) : x(_x), y(_y) {}
 	friend ostream& operator<<(ostream& os, const Point<complex<T>>& point) {
 		os << "(" << point.x << ", " << point.y << ") ";
@@ -172,119 +250,6 @@ public:
 };
 
 template<typename T>
-Polyline<T>::Polyline() : points(nullptr), size(0) {}
-
-template<typename T>
-Polyline<T>::Polyline(int _size) : size(_size) {
-	points = new Point<T>[size];
-}
-
-template<typename T>
-Polyline<T>::Polyline(Polyline<T>& other) {
-	size = other.size;
-	points = new Point<T>[size];
-	for (int i = 0; i < size; ++i)
-	{
-		points[i] = other[i];
-	}
-}
-
-template<typename T>
-Polyline<T>::Polyline(int _size, const T& m1, const T& m2) : size(_size) {
-	points = new Point<T>[size];
-	random_device rd;
-	mt19937 gen(rd());
-	uniform_int_distribution<T> distrib(m1, m2);
-	for (int i = 0; i < size; i++) {
-		T randomX = distrib(gen);
-		T randomY = distrib(gen);
-		points[i] = Point<T>(randomX, randomY);
-	}
-}
-
-template<typename T>
-Polyline<T>::~Polyline() {
-	delete[] points;
-}
-
-template<typename T>
-void Polyline<T>::add(const Point<T>& point) {
-	Point<T>* newElements = new Point<T>[size + 1];
-	for (int i = 0; i < size; ++i) {
-		newElements[i] = points[i];
-	}
-	newElements[size] = point;
-	delete[] points;
-	points = newElements;
-	size += 1;
-}
-
-
-template<typename T>
-Point<T>& Polyline<T>::operator[](const int& index) {
-	return points[index];
-}
-
-template<typename T>
-Polyline<T>& Polyline<T>::operator+(const Polyline<T>& other) {
-	int newSize = size + other.size;
-	Point<T>* newPoints = new Point<T>[newSize];
-	for (int i = 0; i < size; i++) {
-		newPoints[i] = points[i];
-	}
-	for (int i = 0; i < other.size; i++) {
-		newPoints[size + i] = other.points[i];
-	}
-	delete[] points;
-	points = newPoints;
-	size = newSize;
-	return *this;
-}
-
-template<typename T>
-Polyline<T>& Polyline<T>::operator-(const Point<T>& point) {
-	Point<T>* newPoints = new Point<T>[size + 1];
-	newPoints[0] = point;
-	for (int i = 0; i < size; i++) {
-		newPoints[i + 1] = points[i];
-	}
-	delete[] points;
-	points = newPoints;
-	size++;
-	return *this;
-}
-
-template<typename T>
-Polyline<T>& Polyline<T>::operator+(const Point<T>& point) {
-	Point<T>* newPoints = new Point<T>[size + 1];
-	for (int i = 0; i < size; i++) {
-		newPoints[i] = points[i];
-	}
-	newPoints[size] = point;
-	delete[] points;
-	points = newPoints;
-	size++;
-	return *this;
-}
-
-template<typename T>
-double Polyline<T>::length() const {
-	double totalLength = 0.0;
-	for (int i = 0; i < size - 1; i++) {
-		// Расстояние между точками i и i+1
-		T dx = points[i + 1].x - points[i].x;
-		T dy = points[i + 1].y - points[i].y;
-
-		double segmentLength;
-
-		segmentLength = sqrt(static_cast<double>(dx * dx + dy * dy));
-	
-		totalLength += segmentLength;
-	}
-	return totalLength;
-}
-
-template<typename T>
 void createRegularPolygon(int size, Point<T>* points) {
 	if (size <= 2) {
 		throw std::out_of_range("_size should be greater than 2");
@@ -307,21 +272,15 @@ void createRegularPolygon(int size, Point<T>* points) {
 //		throw std::out_of_range("_size should be greater than 2");
 //	}
 //	else {
-//		const T radius = 2;
-//		const T centerX = 0;
-//		const T centerY = 0;
-//		for (int i = 0; i < size; i++) {
-//			points[i].x = centerX + radius * cos(2 * PI * i / size);
-//			points[i].y = centerY + radius * sin(2 * PI * i / size);
-//		}
-//	}
-//
-//	for (int i = 0; i < N; ++i) {
-//		T x = real(center) + radius * cos(2 * PI * i / N);
-//		T y = imag(center) + radius * sin(2 * PI * i / N);
-//		Point<complex<T>> p(complex<T>(x, y));
-//		polyline.add(p);
-//	}
+	//	
+	//
+	//	for (int i = 0; i < N; ++i) {
+	//		T x = real(center) + radius * cos(2 * PI * i / N);
+	//		T y = imag(center) + radius * sin(2 * PI * i / N);
+	//		Point<complex<T>> p(complex<T>(x, y));
+	//		polyline.add(p);
+	//	}
+	// 
 //	return polyline;
 //}
 
