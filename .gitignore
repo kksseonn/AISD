@@ -31,3 +31,5 @@
 *.log
 *.sln
 *.exe
+/Lab1-var5/Polyline/Polyline/Debug/Polyline.vcxproj.FileListAbsolute.txt
+/.gitignore
