@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <cmath>
 #include <random>
-#define PI 3.14159265358979323846
+#define PI 3.14
 
 using namespace std;
 
@@ -27,6 +27,9 @@ class Polyline {
 public:
 	Polyline() : points(nullptr), size(0) {}
 	Polyline(int _size) : size(_size) {
+		if (_size < 0) {
+			throw out_of_range("Index out of range");
+		}
 		points = new Point<T>[size];
 	}
 	Polyline(Polyline<T>& other) {
@@ -38,6 +41,9 @@ public:
 		}
 	}
 	Polyline(int _size, const T& m1, const T& m2) : size(_size) {
+		if (_size < 0) {
+			throw out_of_range("Index out of range");
+		}
 		points = new Point<T>[size];
 		random_device rd;
 		mt19937 gen(rd());
@@ -64,6 +70,9 @@ public:
 	}
 
 	Point<T>& operator[](const int& index) {
+		if (index < 0 || index >= size) {
+			throw out_of_range("Index out of range");
+		}
 		return points[index];
 	}
 	Polyline<T>& operator+(const Polyline<T>& other) {
@@ -145,6 +154,9 @@ class Polyline<complex<T>> {
 public:
 	Polyline() : points(nullptr), size(0) {};
 	Polyline(int _size) : size(_size) {
+		if (_size < 0) {
+			throw out_of_range("Index out of range");
+		}
 		points = new Point<complex<T>>[size];
 	}
 	Polyline(Polyline<complex<T>>& other) {
@@ -155,17 +167,20 @@ public:
 		}
 	}
 	Polyline(int _size, const complex<T>& m1, const complex<T>& m2) : size(_size) {
+		if (_size < 0) {
+			throw out_of_range("Index out of range");
+		}
 		points = new Point<complex<T>>[size];
 		random_device rd;
 		mt19937 gen(rd());
 		uniform_real_distribution<T> real_distrib(m1.real(), m2.real());
-		uniform_real_distribution<T> imag_distrib(m1.imag(), m2.imag());
+		//uniform_real_distribution<T> imag_distrib(m1.imag(), m2.imag());
 		for (int i = 0; i < size; i++) {
-			complex<T> random_X = real_distrib(gen);
-			complex<T> randomX = imag_distrib(gen);
-			complex<T> random_Y = real_distrib(gen);
-			complex<T> randomY = imag_distrib(gen);
-			points[i] = Point<complex<T>>((random_X, randomX), (random_Y, randomY));
+			T random_X = real_distrib(gen);
+			T randomX = real_distrib(gen);
+			T random_Y = real_distrib(gen);
+			T randomY = real_distrib(gen);
+			points[i] = Point<complex<T>>(std::complex<T>(random_X, randomX), std::complex<T>(random_Y, randomY));
 		}
 	}
 	~Polyline() {
@@ -183,9 +198,13 @@ public:
 		size += 1;
 	}
 
-	Point<complex<T>>& operator[](const int& index) {
+	Point<complex<T>>& operator[](int index) {
+		if (index < 0 || index >= size) {
+			throw out_of_range("Index out of range");
+		}
 		return points[index];
 	}
+
 	Polyline<complex<T>>& operator+(const Polyline<complex<T>>& other) {
 		int newSize = size + other.size;
 		Point<complex<T>>* newPoints = new Point<complex<T>>[newSize];
@@ -243,7 +262,7 @@ public:
 	
 	friend ostream& operator<<(ostream& os, const Polyline<complex<T>>& polyline) {
 		for (int i = 0; i < polyline.size; i++) {
-			os << "(" << polyline.points[i].x << ", " << polyline.points[i].y << ") ";
+			os << "(" << polyline.points[i].x << ",  " << polyline.points[i].y << ") ";
 		}
 		return os;
 	}
@@ -252,28 +271,24 @@ public:
 template<typename T>
 void createRegularPolygon(int size, Point<T>* points) {
 	if (size <= 2) {
-		throw std::out_of_range("size should be greater than 2");
+		throw std::runtime_error("size should be greater than 2");
 	}
-	else {
-		const T radius = 2;
-		for (int i = 0; i < size; i++) {
-			points[i].x = radius * cos(2 * PI * i / size);
-			points[i].y = radius * sin(2 * PI * i / size);
-		}
+	const T radius = 2;
+	for (int i = 0; i < size; i++) {
+		points[i].x = radius * cos(2 * PI * i / size);
+		points[i].y = radius * sin(2 * PI * i / size);
 	}
 }
 
 template<typename T>
 void createRegularPolygon(int size, Point<complex<T>>* points) {
 	if (size <= 2) {
-		throw std::out_of_range("size should be greater than 2");
+		throw std::runtime_error("size should be greater than 2");
 	}
-	else {
-		const T radius = 2;
-		for (int i = 0; i < size; i++) {
-			points[i].x = radius * cos(2 * PI * i / size);
-			points[i].y = radius * sin(2 * PI * i / size);
-		}
+	const T radius = 2;
+	for (int i = 0; i < size; i++) {
+		points[i].x = radius * cos(2 * PI * i / size);
+		points[i].y = radius * sin(2 * PI * i / size);
 	}
 }
 
@@ -304,7 +319,7 @@ int main() {
 	cout << polyline_copy << endl;
 
 	cout << "retrieved_point: " << endl;
-	cout << polyline_copy[3] << endl;
+	cout << polyline_copy[2] << endl;
 
 	Polyline<int> other_polyline;
 	Polyline<int> combined_polyline = polyline_with_values + polyline_copy;
@@ -350,7 +365,7 @@ int main() {
 	cout << polyline_copy_complex << endl;
 
 	cout << "retrieved_copmlex_point: " << endl;
-	cout << polyline_copy_complex[3] << endl;
+	cout << polyline_copy_complex[2] << endl;
 
 	Polyline<complex<float>> combined_complex_polyline = polyline_with_complex_values + polyline_copy_complex;
 	cout << "combined_complex_polyline: " << endl;
@@ -368,12 +383,12 @@ int main() {
 	cout << "combined_polyline_complex_poly_length: " << endl;
 	cout << combined_polyline_complex_poly_length << endl;
 
-	// Создание правильного многоугольника
+	// Создание правильного многоугольника c комплексными
 	Point<complex<float>>* complex_points = new Point<complex<float>>[4];
 	createRegularPolygon(4, complex_points);
 	cout << "Coordinates of the regular polygon for complex: " << endl;
 	for (int i = 0; i < 4; i++) {
-		cout << points[i] << " ";
+		cout << complex_points[i] << " ";
 	}
 	return 0;
 }
