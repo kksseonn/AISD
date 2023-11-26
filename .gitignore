@@ -33,3 +33,7 @@
 *.exe
 /Lab1-var5/Polyline/Polyline/Debug/Polyline.vcxproj.FileListAbsolute.txt
 /.gitignore
+/Lab2-var3-531/LinkedList/x64/Debug
+/Lab2-var3-531/LinkedList/.vs
+/Lab2-var3-531/LinkedList/Debug
+/Lab2-var3-531/.vs
