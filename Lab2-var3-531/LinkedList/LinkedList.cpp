@@ -5,8 +5,6 @@
 #include <random>
 #include <cstdlib>
 
-using namespace std;
-
 template <typename T>
 struct Node {
     T data;
@@ -24,42 +22,47 @@ public:
     LinkedList() : head(nullptr) {}
 
     LinkedList(const LinkedList& other) {
-        if (other.head == nullptr) {
-            head = nullptr;
-        }
-        else {
-            head = new Node<T>(other.head->data);
-            if (head == nullptr) {
-                throw bad_alloc(); 
-            }
+        head = nullptr;
+        Node<T>* otherCurrent = other.head;
 
-            Node<T>* current = head;
-            Node<T>* otherCurrent = other.head->next;
-
-            while (otherCurrent != nullptr) {
-                current->next = new Node<T>(otherCurrent->data);
-                if (current->next == nullptr) {
-                    clear();
-                    throw bad_alloc();
-                }
-                current = current->next;
-                otherCurrent = otherCurrent->next;
+        while (otherCurrent != nullptr) {
+            push_tail(otherCurrent->data);
+            otherCurrent = otherCurrent->next;
+            if (otherCurrent->next == other.head) {
+                break;
             }
         }
     }
 
     LinkedList(int size) {
         head = nullptr;
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<T> distribution(0, 99);
+
         for (int i = 0; i < size; ++i) {
-            pushBack(rand() % 100);
+            push_tail(distribution(gen));
         }
     }
 
-    ~LinkedList() {
-        clear();
+    LinkedList& operator=(const LinkedList& other) {
+        if (this != &other) {
+            clear();
+            Node<T>* otherCurrent = other.head;
+
+            while (otherCurrent != nullptr) {
+                push_tail(otherCurrent->data);
+                otherCurrent = otherCurrent->next;
+                if (otherCurrent->next == other.head) {
+                    break;
+                }
+            }
+        }
+
+        return *this;
     }
 
-    void pushBack(const T& value) {
+    void push_tail(const T& value) {
         Node<T>* newNode = new Node<T>(value);
 
         if (head == nullptr) {
@@ -76,17 +79,71 @@ public:
         }
     }
 
+    void push_tail(const LinkedList& otherList) {
+        if (otherList.head == nullptr) {
+            return;
+        }
+
+        Node<T>* otherCurrent = otherList.head;
+
+        do {
+            push_tail(otherCurrent->data);
+            otherCurrent = otherCurrent->next;
+        } while (otherCurrent != otherList.head);
+    }
+
+    void push_head(const T& value) {
+        Node<T>* newNode = new Node<T>(value);
+
+        if (head == nullptr) {
+            head = newNode;
+            newNode->next = head;
+        }
+        else {
+            Node<T>* current = head;
+            while (current->next != head) {
+                current = current->next;
+            }
+            newNode->next = head;
+            head = newNode;
+            current->next = head;
+        }
+    }
+
+    void push_head(const LinkedList& otherList) {
+        if (otherList.head == nullptr) {
+            return;
+        }
+
+        Node<T>* otherCurrent = otherList.head;
+        Node<T>* lastAdded = nullptr;
+
+        do {
+            Node<T>* newNode = new Node<T>(otherCurrent->data);
+            newNode->next = lastAdded;
+            lastAdded = newNode;
+
+            otherCurrent = otherCurrent->next;
+        } while (otherCurrent != otherList.head);
+
+        Node<T>* current = lastAdded;
+        do {
+            push_head(current->data);
+            current = current->next;
+        } while (current != nullptr);
+    }
+
     void printList() const {
         if (head == nullptr) {
-            cout << "List is empty" << endl;
+            std::cout << "List is empty" << std::endl;
         }
         else {
             Node<T>* current = head;
             do {
-                cout << current->data << " ";
+                std::cout << current->data << " ";
                 current = current->next;
             } while (current != head);
-            cout << endl;
+            std::cout << std::endl;
         }
     }
 
@@ -96,29 +153,42 @@ public:
             head = head->next;
             delete temp;
         }
+        head = nullptr;
     }
 };
 
 int main() {
     try {
         LinkedList<int> list1;
-        list1.pushBack(1);
-        list1.pushBack(2);
-        list1.pushBack(3);
+        list1.push_tail(1);
+        list1.push_tail(2);
+        list1.push_tail(3);
 
-        cout << "List 1: "<< endl;
+        std::cout << "List 1:" << std::endl;
         list1.printList();
 
-        LinkedList<int> list2(list1);
-        cout << "List 2 (copy List 1): " << endl;
+        LinkedList<int> list2;
+        list2.push_tail(4);
+        list2.push_tail(5);
+
+        std::cout << "List 2:" << std::endl;
         list2.printList();
 
-        LinkedList<int> list3(5);
-        cout << "List 3 (random value): " << endl;
-        list3.printList();
+        list1.push_tail(list2);
+
+        std::cout << "List 1 after push_tail list2:" << std::endl;
+        list1.printList();
+
+        list1.push_head(0);  
+        std::cout << "List 1 after push_head 0:" << std::endl;
+        list1.printList();
+
+        list1.push_head(list2);  
+        std::cout << "List 1 after push_head with list2:" << std::endl;
+        list1.printList();
     }
     catch (const std::exception& e) {
-        cerr << "Error: " << e.what() << endl;
+        std::cerr << "Error: " << e.what() << std::endl;
     }
 
     return 0;
