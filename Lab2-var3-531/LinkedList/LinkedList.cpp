@@ -28,7 +28,8 @@ public:
         while (otherCurrent != nullptr) {
             push_tail(otherCurrent->data);
             otherCurrent = otherCurrent->next;
-            if (otherCurrent->next == other.head) {
+
+            if (otherCurrent == other.head) {
                 break;
             }
         }
@@ -48,12 +49,14 @@ public:
     LinkedList& operator=(const LinkedList& other) {
         if (this != &other) {
             clear();
+
             Node<T>* otherCurrent = other.head;
 
             while (otherCurrent != nullptr) {
                 push_tail(otherCurrent->data);
                 otherCurrent = otherCurrent->next;
-                if (otherCurrent->next == other.head) {
+
+                if (otherCurrent == other.head) {
                     break;
                 }
             }
@@ -86,10 +89,14 @@ public:
 
         Node<T>* otherCurrent = otherList.head;
 
-        do {
+        while (true) {
             push_tail(otherCurrent->data);
             otherCurrent = otherCurrent->next;
-        } while (otherCurrent != otherList.head);
+
+            if (otherCurrent == otherList.head) {
+                break;
+            }
+        }
     }
 
     void push_head(const T& value) {
@@ -187,7 +194,7 @@ public:
         Node<T>* current = head;
         Node<T>* previous = nullptr;
 
-        do {
+        while (current != nullptr) {
             if (current->data == value) {
                 if (previous == nullptr) {
                     Node<T>* temp = current;
@@ -197,15 +204,20 @@ public:
                 }
                 else {
                     previous->next = current->next;
-                    delete current;
-                    current = previous->next;
+                    Node<T>* temp = current;
+                    current = current->next;
+                    delete temp;
                 }
             }
             else {
                 previous = current;
                 current = current->next;
             }
-        } while (current != head);
+
+            if (current == head) {
+                break;
+            }
+        }
     }
 
     const T& operator[](int index) const {
@@ -246,10 +258,13 @@ public:
         }
         else {
             Node<T>* current = head;
-            do {
+            while (true) {
                 std::cout << current->data << " ";
                 current = current->next;
-            } while (current != head);
+                if (current == head) {
+                    break;
+                }
+            }
             std::cout << std::endl;
         }
     }
@@ -266,6 +281,15 @@ public:
 
 int main() {
     try {
+        LinkedList<int> randomList(5);
+        std::cout << "List with random values:" << std::endl;
+        randomList.printList();
+
+        LinkedList<int> assignedList;
+        assignedList = randomList;
+        std::cout << "List assigned from randomList:" << std::endl;
+        assignedList.printList();
+
         LinkedList<int> list1;
         list1.push_tail(1);
         list1.push_tail(2);
@@ -312,6 +336,7 @@ int main() {
         list1[1] = 10;
         std::cout << "List 1 after modifying value at index 1:" << std::endl;
         list1.printList();
+
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
