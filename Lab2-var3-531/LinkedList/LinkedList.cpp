@@ -81,7 +81,7 @@ public:
 
     void push_tail(const LinkedList& otherList) {
         if (otherList.head == nullptr) {
-            return;
+            throw std::out_of_range("push_tail: List is empty");
         }
 
         Node<T>* otherCurrent = otherList.head;
@@ -112,7 +112,7 @@ public:
 
     void push_head(const LinkedList& otherList) {
         if (otherList.head == nullptr) {
-            return;
+            throw std::out_of_range("push_head: List is empty");
         }
 
         Node<T>* otherCurrent = otherList.head;
@@ -208,6 +208,38 @@ public:
         } while (current != head);
     }
 
+    const T& operator[](int index) const {
+        if (head == nullptr || index < 0) {
+            throw std::out_of_range("Index out of range");
+        }
+
+        Node<T>* current = head;
+        for (int i = 0; i < index; ++i) {
+            current = current->next;
+            if (current == head) {
+                throw std::out_of_range("Index out of range");
+            }
+        }
+
+        return current->data;
+    }
+
+    T& operator[](int index) {
+        if (head == nullptr || index < 0) {
+            throw std::out_of_range("Index out of range");
+        }
+
+        Node<T>* current = head;
+        for (int i = 0; i < index; ++i) {
+            current = current->next;
+            if (current == head) {
+                throw std::out_of_range("Index out of range");
+            }
+        }
+
+        return current->data;
+    }
+
     void printList() const {
         if (head == nullptr) {
             std::cout << "List is empty" << std::endl;
@@ -272,6 +304,13 @@ int main() {
 
         std::cout << "List 1 after deleting nodes with value 2:" << std::endl;
         list1.delete_node(2);
+        list1.printList();
+
+        std::cout << "Value at index 0 in List 1: " << std::endl;
+        std::cout << list1[0] << std::endl;
+
+        list1[1] = 10;
+        std::cout << "List 1 after modifying value at index 1:" << std::endl;
         list1.printList();
     }
     catch (const std::exception& e) {
