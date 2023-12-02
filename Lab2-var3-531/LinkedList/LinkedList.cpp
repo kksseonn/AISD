@@ -179,6 +179,35 @@ public:
         }
     }
 
+    void delete_node(const T& value) {
+        if (head == nullptr) {
+            return;
+        }
+
+        Node<T>* current = head;
+        Node<T>* previous = nullptr;
+
+        do {
+            if (current->data == value) {
+                if (previous == nullptr) {
+                    Node<T>* temp = current;
+                    current = current->next;
+                    head = current;
+                    delete temp;
+                }
+                else {
+                    previous->next = current->next;
+                    delete current;
+                    current = previous->next;
+                }
+            }
+            else {
+                previous = current;
+                current = current->next;
+            }
+        } while (current != head);
+    }
+
     void printList() const {
         if (head == nullptr) {
             std::cout << "List is empty" << std::endl;
@@ -239,6 +268,10 @@ int main() {
 
         std::cout << "List 1 after pop_tail:" << std::endl;
         list1.pop_tail();
+        list1.printList();
+
+        std::cout << "List 1 after deleting nodes with value 2:" << std::endl;
+        list1.delete_node(2);
         list1.printList();
     }
     catch (const std::exception& e) {
