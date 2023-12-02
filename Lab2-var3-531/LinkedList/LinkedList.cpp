@@ -133,6 +133,52 @@ public:
         } while (current != nullptr);
     }
 
+    void pop_head() {
+        if (head == nullptr) {
+            throw std::out_of_range("pop_head: List is empty");
+        }
+
+        Node<T>* temp = head;
+        Node<T>* current = head;
+
+        while (current->next != head) {
+            current = current->next;
+        }
+
+        if (head->next == head) {
+            delete head;
+            head = nullptr;
+        }
+        else {
+            head = head->next;
+            current->next = head;
+            delete temp;
+        }
+    }
+
+    void pop_tail() {
+        if (head == nullptr) {
+            throw std::out_of_range("pop_tail: List is empty");
+        }
+
+        Node<T>* current = head;
+        Node<T>* previous = nullptr;
+
+        while (current->next != head) {
+            previous = current;
+            current = current->next;
+        }
+
+        if (previous == nullptr) {
+            delete head;
+            head = nullptr;
+        }
+        else {
+            previous->next = head;
+            delete current;
+        }
+    }
+
     void printList() const {
         if (head == nullptr) {
             std::cout << "List is empty" << std::endl;
@@ -185,6 +231,14 @@ int main() {
 
         list1.push_head(list2);  
         std::cout << "List 1 after push_head with list2:" << std::endl;
+        list1.printList();
+
+        std::cout << "List 1 after pop_head:" << std::endl;
+        list1.pop_head();
+        list1.printList();
+
+        std::cout << "List 1 after pop_tail:" << std::endl;
+        list1.pop_tail();
         list1.printList();
     }
     catch (const std::exception& e) {
