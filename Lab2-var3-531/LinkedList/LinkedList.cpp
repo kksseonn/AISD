@@ -1,16 +1,17 @@
 #pragma once
 #include <iostream>
-#include <stdexcept>
 #include <cmath>
+#include <stdexcept>
 #include <random>
-#include <cstdlib>
+
 
 template <typename T>
 struct Node {
-    T data;
+    T coefficient;
+    int exponent;
     Node* next;
 
-    Node(const T& newData) : data(newData), next(nullptr) {}
+    Node(const T& coeff, int exp = 0) : coefficient(coeff), exponent(exp), next(nullptr) {}
 };
 
 template <typename T>
@@ -26,12 +27,13 @@ public:
         Node<T>* otherCurrent = other.head;
 
         while (otherCurrent != nullptr) {
-            push_tail(otherCurrent->data);
-            otherCurrent = otherCurrent->next;
+            push_tail(otherCurrent->coefficient, otherCurrent->exponent);
 
-            if (otherCurrent == other.head) {
+            if (otherCurrent->next == other.head) {
                 break;
             }
+
+            otherCurrent = otherCurrent->next;
         }
     }
 
@@ -39,10 +41,10 @@ public:
         head = nullptr;
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_int_distribution<T> distribution(0, 99);
+        std::uniform_int_distribution<T> distribution(0, 20);
 
         for (int i = 0; i < size; ++i) {
-            push_tail(distribution(gen));
+            push_tail(distribution(gen), distribution(gen));
         }
     }
 
@@ -53,7 +55,7 @@ public:
             Node<T>* otherCurrent = other.head;
 
             while (otherCurrent != nullptr) {
-                push_tail(otherCurrent->data);
+                push_tail(otherCurrent->coefficient, otherCurrent->exponent);
                 otherCurrent = otherCurrent->next;
 
                 if (otherCurrent == other.head) {
@@ -65,8 +67,8 @@ public:
         return *this;
     }
 
-    void push_tail(const T& value) {
-        Node<T>* newNode = new Node<T>(value);
+    void push_tail(const T& coefficient, int exponent) {
+        Node<T>* newNode = new Node<T>(coefficient, exponent);
 
         if (head == nullptr) {
             head = newNode;
@@ -77,6 +79,7 @@ public:
             while (current->next != head) {
                 current = current->next;
             }
+
             current->next = newNode;
             newNode->next = head;
         }
@@ -89,18 +92,14 @@ public:
 
         Node<T>* otherCurrent = otherList.head;
 
-        while (true) {
-            push_tail(otherCurrent->data);
+        do {
+            push_tail(otherCurrent->coefficient, otherCurrent->exponent);
             otherCurrent = otherCurrent->next;
-
-            if (otherCurrent == otherList.head) {
-                break;
-            }
-        }
+        } while (otherCurrent != otherList.head);
     }
 
-    void push_head(const T& value) {
-        Node<T>* newNode = new Node<T>(value);
+    void push_head(const T& coefficient, int exponent) {
+        Node<T>* newNode = new Node<T>(coefficient, exponent);
 
         if (head == nullptr) {
             head = newNode;
@@ -126,7 +125,7 @@ public:
         Node<T>* lastAdded = nullptr;
 
         do {
-            Node<T>* newNode = new Node<T>(otherCurrent->data);
+            Node<T>* newNode = new Node<T>(otherCurrent->coefficient, otherCurrent->exponent);
             newNode->next = lastAdded;
             lastAdded = newNode;
 
@@ -135,7 +134,7 @@ public:
 
         Node<T>* current = lastAdded;
         do {
-            push_head(current->data);
+            push_head(current->coefficient, current->exponent);
             current = current->next;
         } while (current != nullptr);
     }
@@ -186,7 +185,7 @@ public:
         }
     }
 
-    void delete_node(const T& value) {
+    void delete_node(const T& value, int exponent) {
         if (head == nullptr) {
             return;
         }
@@ -195,7 +194,7 @@ public:
         Node<T>* previous = nullptr;
 
         while (current != nullptr) {
-            if (current->data == value) {
+            if (current->coefficient == value && current->exponent == exponent) {
                 if (previous == nullptr) {
                     Node<T>* temp = current;
                     current = current->next;
@@ -220,7 +219,7 @@ public:
         }
     }
 
-    const T& operator[](int index) const {
+    const Node<T>& operator[](int index) const {
         if (head == nullptr || index < 0) {
             throw std::out_of_range("Index out of range");
         }
@@ -233,10 +232,10 @@ public:
             }
         }
 
-        return current->data;
+        return *current;
     }
 
-    T& operator[](int index) {
+    Node<T>& operator[](int index) {
         if (head == nullptr || index < 0) {
             throw std::out_of_range("Index out of range");
         }
@@ -249,23 +248,26 @@ public:
             }
         }
 
-        return current->data;
+        return *current;
     }
 
     void printList() const {
         if (head == nullptr) {
-            std::cout << "List is empty" << std::endl;
+            std::cout << "Polynomial is empty" << std::endl;
         }
         else {
             Node<T>* current = head;
-            while (true) {
-                std::cout << current->data << " ";
-                current = current->next;
-                if (current == head) {
-                    break;
+            do {
+                std::cout << current->coefficient << "x^" << current->exponent;
+
+                if (current->next != head) {
+                    std::cout << " + ";
                 }
-            }
-            std::cout << std::endl;
+
+                current = current->next;
+            } while (current != head);
+
+            std::cout << " = f" << std::endl << std::endl;
         }
     }
 
@@ -277,7 +279,25 @@ public:
         }
         head = nullptr;
     }
+
+    T evaluate(T x) const {
+        if (head == nullptr) {
+            throw std::out_of_range("evaluate: Polynomial is empty");
+        }
+
+        T result = 0;
+        Node<T>* current = head;
+
+        do {
+            result += current->coefficient * std::pow(x, current->exponent);
+            current = current->next;
+        } while (current != head);
+
+        return result;
+    }
 };
+
+
 
 int main() {
     try {
@@ -291,30 +311,27 @@ int main() {
         assignedList.printList();
 
         LinkedList<int> list1;
-        list1.push_tail(1);
-        list1.push_tail(2);
-        list1.push_tail(3);
-
+        list1.push_tail(2, 3); 
+        list1.push_tail(5, 2);  
+        list1.push_tail(1, 0); 
         std::cout << "List 1:" << std::endl;
         list1.printList();
 
         LinkedList<int> list2;
-        list2.push_tail(4);
-        list2.push_tail(5);
-
+        list2.push_tail(4, 3);
+        list2.push_tail(2, 2);
         std::cout << "List 2:" << std::endl;
         list2.printList();
 
         list1.push_tail(list2);
-
         std::cout << "List 1 after push_tail list2:" << std::endl;
         list1.printList();
 
-        list1.push_head(0);  
-        std::cout << "List 1 after push_head 0:" << std::endl;
+        list1.push_head(1, 1);
+        std::cout << "List 1 after push_head:" << std::endl;
         list1.printList();
 
-        list1.push_head(list2);  
+        list1.push_head(list2);
         std::cout << "List 1 after push_head with list2:" << std::endl;
         list1.printList();
 
@@ -326,17 +343,21 @@ int main() {
         list1.pop_tail();
         list1.printList();
 
-        std::cout << "List 1 after deleting nodes with value 2:" << std::endl;
-        list1.delete_node(2);
+        std::cout << "List 1 after deleting node with 2x^3:" << std::endl;
+        list1.delete_node(2, 3);
         list1.printList();
 
-        std::cout << "Value at index 0 in List 1: " << std::endl;
-        std::cout << list1[0] << std::endl;
+        std::cout << "Polynom at index 0 in List 1: " << std::endl;
+        const Node<int>& term = list1[0];
+        std::cout << term.coefficient << "x^" << term.exponent << std::endl << std::endl;
 
-        list1[1] = 10;
-        std::cout << "List 1 after modifying value at index 1:" << std::endl;
+        
+        std::cout << "List 1 after modifying term at index 1:" << std::endl;
+        list1[1].coefficient = 6;
+        list1[1].exponent = 6;
         list1.printList();
 
+        std::cout << "Evaluating the polynomial at x = 2: f = " << list1.evaluate(2) << std::endl;
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
