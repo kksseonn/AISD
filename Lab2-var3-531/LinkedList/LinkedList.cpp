@@ -280,23 +280,31 @@ public:
         head = nullptr;
     }
 
-    T evaluate(T x) const {
-        if (head == nullptr) {
-            throw std::out_of_range("evaluate: Polynomial is empty");
-        }
+    const Node<T>* getHead() const {
+        return head;
+    }
 
-        T result = 0;
-        Node<T>* current = head;
-
-        do {
-            result += current->coefficient * std::pow(x, current->exponent);
-            current = current->next;
-        } while (current != head);
-
-        return result;
+    bool empty() const {
+        return head == nullptr;
     }
 };
 
+template <typename T>
+T evaluate(const LinkedList<T>& list, T x) {
+    if (list.empty()) {
+        throw std::out_of_range("evaluate: Polynomial is empty");
+    }
+
+    double result = 0;
+    const Node<T>* current = list.getHead();
+
+    do {
+        result += current->coefficient * std::pow(x, current->exponent);
+        current = current->next;
+    } while (current != list.getHead());
+
+    return static_cast<T>(result);
+}
 
 
 int main() {
@@ -357,7 +365,7 @@ int main() {
         list1[1].exponent = 6;
         list1.printList();
 
-        std::cout << "Evaluating the polynomial at x = 2: f = " << list1.evaluate(2) << std::endl;
+        std::cout << "Evaluating the polynomial at x = 2: f = " << evaluate(list1, 2) << std::endl;
     }
     catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
