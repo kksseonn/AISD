@@ -37,6 +37,18 @@ public:
         }
     }
 
+    ~LinkedList() {
+        if (head != nullptr) {
+            Node<T>* current = head->next;
+            while (current != head) {
+                Node<T>* temp = current;
+                current = current->next;
+                delete temp;
+            }
+            delete head;
+        }
+    }
+
     LinkedList(int size) {
         head = nullptr;
         std::random_device rd;
@@ -50,7 +62,6 @@ public:
 
     LinkedList& operator=(const LinkedList& other) {
         if (this != &other) {
-            clear();
 
             Node<T>* otherCurrent = other.head;
 
@@ -269,15 +280,6 @@ public:
 
             std::cout << " = f" << std::endl << std::endl;
         }
-    }
-
-    void clear() {
-        while (head != nullptr) {
-            Node<T>* temp = head;
-            head = head->next;
-            delete temp;
-        }
-        head = nullptr;
     }
 
     const Node<T>* getHead() const {
