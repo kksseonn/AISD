@@ -6,12 +6,19 @@
 
 
 template <typename T>
-struct Node {
+struct Term {
     T coefficient;
     int exponent;
+
+    Term(const T& coeff, int exp = 0) : coefficient(coeff), exponent(exp) {}
+};
+
+template <typename T>
+struct Node {
+    Term<T> data;
     Node* next;
 
-    Node(const T& coeff, int exp = 0) : coefficient(coeff), exponent(exp), next(nullptr) {}
+    Node(const T& coeff, int exp = 0) : data(coeff, exp), next(nullptr) {}
 };
 
 template <typename T>
@@ -22,18 +29,27 @@ private:
 public:
     LinkedList() : head(nullptr) {}
 
-    LinkedList(const LinkedList& other) {
-        head = nullptr;
-        Node<T>* otherCurrent = other.head;
+    LinkedList(const LinkedList& other) : head(nullptr) {
+        Node<T>* current = other.head;
 
-        while (otherCurrent != nullptr) {
-            push_tail(otherCurrent->coefficient, otherCurrent->exponent);
+        while (current != nullptr) {
+            push_tail(current->data.coefficient, current->data.exponent);
 
-            if (otherCurrent->next == other.head) {
+            if (current->next == other.head) {
                 break;
             }
 
-            otherCurrent = otherCurrent->next;
+            current = current->next;
+        }
+    }
+
+    LinkedList(int size) : head(nullptr) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<T> distribution(0, 20);
+
+        for (int i = 0; i < size; ++i) {
+            push_tail(distribution(gen), distribution(gen));
         }
     }
 
@@ -49,29 +65,19 @@ public:
         }
     }
 
-    LinkedList(int size) {
-        head = nullptr;
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<T> distribution(0, 20);
-
-        for (int i = 0; i < size; ++i) {
-            push_tail(distribution(gen), distribution(gen));
-        }
-    }
-
     LinkedList& operator=(const LinkedList& other) {
         if (this != &other) {
 
             Node<T>* otherCurrent = other.head;
 
             while (otherCurrent != nullptr) {
-                push_tail(otherCurrent->coefficient, otherCurrent->exponent);
-                otherCurrent = otherCurrent->next;
+                push_tail(otherCurrent->data.coefficient, otherCurrent->data.exponent);
 
-                if (otherCurrent == other.head) {
+                if (otherCurrent->next == other.head) {
                     break;
                 }
+
+                otherCurrent = otherCurrent->next;
             }
         }
 
@@ -104,7 +110,7 @@ public:
         Node<T>* otherCurrent = otherList.head;
 
         do {
-            push_tail(otherCurrent->coefficient, otherCurrent->exponent);
+            push_tail(otherCurrent->data.coefficient, otherCurrent->data.exponent);
             otherCurrent = otherCurrent->next;
         } while (otherCurrent != otherList.head);
     }
@@ -136,7 +142,7 @@ public:
         Node<T>* lastAdded = nullptr;
 
         do {
-            Node<T>* newNode = new Node<T>(otherCurrent->coefficient, otherCurrent->exponent);
+            Node<T>* newNode = new Node<T>(otherCurrent->data.coefficient, otherCurrent->data.exponent);
             newNode->next = lastAdded;
             lastAdded = newNode;
 
@@ -145,7 +151,7 @@ public:
 
         Node<T>* current = lastAdded;
         do {
-            push_head(current->coefficient, current->exponent);
+            push_head(current->data.coefficient, current->data.exponent);
             current = current->next;
         } while (current != nullptr);
     }
@@ -204,13 +210,11 @@ public:
         Node<T>* current = head;
         Node<T>* previous = nullptr;
 
-        while (current != nullptr) {
-            if (current->coefficient == value && current->exponent == exponent) {
+        do {
+            if (current->data.coefficient == value && current->data.exponent == exponent) {
                 if (previous == nullptr) {
-                    Node<T>* temp = current;
-                    current = current->next;
-                    head = current;
-                    delete temp;
+                    pop_head();
+                    current = head;  
                 }
                 else {
                     previous->next = current->next;
@@ -223,14 +227,26 @@ public:
                 previous = current;
                 current = current->next;
             }
-
-            if (current == head) {
-                break;
-            }
-        }
+        } while (current != head);
     }
 
-    const Node<T>& operator[](int index) const {
+    const Term<T>& operator[](int index) const {
+        if (head == nullptr || index < 0) {
+            throw std::out_of_range("Index out of range");
+        }
+
+        const Node<T>* current = head;
+        for (int i = 0; i < index; ++i) {
+            current = current->next;
+            if (current == head) {
+                throw std::out_of_range("Index out of range");
+            }
+        }
+
+        return current->data;
+    }
+
+    Term<T>& operator[](int index) {
         if (head == nullptr || index < 0) {
             throw std::out_of_range("Index out of range");
         }
@@ -243,23 +259,7 @@ public:
             }
         }
 
-        return *current;
-    }
-
-    Node<T>& operator[](int index) {
-        if (head == nullptr || index < 0) {
-            throw std::out_of_range("Index out of range");
-        }
-
-        Node<T>* current = head;
-        for (int i = 0; i < index; ++i) {
-            current = current->next;
-            if (current == head) {
-                throw std::out_of_range("Index out of range");
-            }
-        }
-
-        return *current;
+        return current->data;
     }
 
     void printList() const {
@@ -267,9 +267,9 @@ public:
             std::cout << "Polynomial is empty" << std::endl;
         }
         else {
-            Node<T>* current = head;
+            const Node<T>* current = head;
             do {
-                std::cout << current->coefficient << "x^" << current->exponent;
+                std::cout << current->data.coefficient << "x^" << current->data.exponent;
 
                 if (current->next != head) {
                     std::cout << " + ";
@@ -301,7 +301,7 @@ T evaluate(const LinkedList<T>& list, T x) {
     const Node<T>* current = list.getHead();
 
     do {
-        result += current->coefficient * std::pow(x, current->exponent);
+        result += current->data.coefficient * std::pow(x, current->data.exponent);
         current = current->next;
     } while (current != list.getHead());
 
@@ -358,10 +358,9 @@ int main() {
         list1.printList();
 
         std::cout << "Polynom at index 0 in List 1: " << std::endl;
-        const Node<int>& term = list1[0];
+        const auto& term = list1[0];
         std::cout << term.coefficient << "x^" << term.exponent << std::endl << std::endl;
 
-        
         std::cout << "List 1 after modifying term at index 1:" << std::endl;
         list1[1].coefficient = 6;
         list1[1].exponent = 6;
