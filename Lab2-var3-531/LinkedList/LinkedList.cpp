@@ -61,7 +61,7 @@ public:
                 current = current->next;
                 delete temp;
             }
-            delete head;
+            delete head; 
         }
     }
 
@@ -204,42 +204,46 @@ public:
 
     void delete_node(const T& value, int exponent) {
         if (head == nullptr) {
-            return;
+            throw std::out_of_range("delete_node: List is empty");
         }
 
         Node<T>* current = head;
         Node<T>* previous = nullptr;
 
         do {
-            if (current->data.coefficient == value && current->data.exponent == exponent) {
+            if (current->data.exponent == exponent && current->data.coefficient == value) {
                 if (previous == nullptr) {
                     pop_head();
-                    current = head;  
+                    return;
                 }
                 else {
                     previous->next = current->next;
-                    Node<T>* temp = current;
-                    current = current->next;
-                    delete temp;
+                    delete current;
+                    return;
                 }
             }
-            else {
-                previous = current;
-                current = current->next;
-            }
+
+            previous = current;
+            current = current->next;
         } while (current != head);
+
+        throw std::out_of_range("delete_node: Node not found");
     }
 
     const Term<T>& operator[](int index) const {
-        if (head == nullptr || index < 0) {
-            throw std::out_of_range("Index out of range");
+        if (index < 0) {
+            throw std::out_of_range("operator[]: Index must be non-negative");
+        }
+
+        if (head == nullptr) {
+            throw std::out_of_range("operator[]: List is empty");
         }
 
         const Node<T>* current = head;
         for (int i = 0; i < index; ++i) {
             current = current->next;
             if (current == head) {
-                throw std::out_of_range("Index out of range");
+                throw std::out_of_range("operator[]: Index out of range");
             }
         }
 
@@ -247,15 +251,19 @@ public:
     }
 
     Term<T>& operator[](int index) {
-        if (head == nullptr || index < 0) {
-            throw std::out_of_range("Index out of range");
+        if (index < 0) {
+            throw std::out_of_range("operator[]: Index must be non-negative");
+        }
+
+        if (head == nullptr) {
+            throw std::out_of_range("operator[]: List is empty");
         }
 
         Node<T>* current = head;
         for (int i = 0; i < index; ++i) {
             current = current->next;
             if (current == head) {
-                throw std::out_of_range("Index out of range");
+                throw std::out_of_range("operator[]: Index out of range");
             }
         }
 
