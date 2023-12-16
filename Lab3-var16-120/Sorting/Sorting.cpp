@@ -119,6 +119,52 @@ std::ostream& operator<<(std::ostream& os, const std::vector<int>& arr) {
     return os;
 }
 
+std::vector<int> generate_random_array(size_t size) {
+    std::vector<int> arr;
+    for (size_t i = 0; i < size; ++i) {
+        arr.push_back(rand());
+    }
+    return arr;
+}
+
+std::vector<int> generate_sorted_array(size_t size) {
+    std::vector<int> arr;
+    for (size_t i = 0; i < size; ++i) {
+        arr.push_back(i);
+    }
+    return arr;
+}
+
+std::vector<int> generate_reverse_sorted_array(size_t size) {
+    std::vector<int> arr;
+    for (size_t i = size; i > 0; --i) {
+        arr.push_back(i);
+    }
+    return arr;
+}
+
+stats run_experiment(std::vector<int>& arr, stats(*sort_function)(std::vector<int>&)) {
+    std::vector<int> copy = arr; // Create a copy to preserve the original array
+    return sort_function(copy);
+}
+
+stats run_average_experiment(size_t size, stats(*sort_function)(std::vector<int>&), size_t num_experiments) {
+    stats total_stats;
+    srand(static_cast<unsigned int>(time(0))); // Seed for random number generation
+
+    for (size_t i = 0; i < num_experiments; ++i) {
+        std::vector<int> arr = generate_random_array(size);
+        total_stats.comparison_count += run_experiment(arr, sort_function).comparison_count;
+        total_stats.copy_count += run_experiment(arr, sort_function).copy_count;
+    }
+
+    // Calculate averages
+    total_stats.comparison_count /= num_experiments;
+    total_stats.copy_count /= num_experiments;
+
+    return total_stats;
+}
+
 int main() {
     try {
         std::vector<int> arr = { 5, 2, 9, 1, 5, 6 };
@@ -145,6 +191,39 @@ int main() {
         std::cout << arr3 << "\n";
         std::cout << "Comparison count: " << result_quick.comparison_count << "\n";
         std::cout << "Copy count: " << result_quick.copy_count << "\n\n";
+
+        const size_t array_size = 5000;
+        const size_t num_experiments = 100;
+
+        // Random array experiment
+        stats avg_random_insertion = run_average_experiment(array_size, insertion_sort, num_experiments);
+        stats avg_random_comb = run_average_experiment(array_size, comb_sort, num_experiments);
+        stats avg_random_quick = run_average_experiment(array_size, quick_sort, num_experiments);
+
+        // Sorted array experiment
+        stats avg_sorted_insertion = run_average_experiment(array_size, insertion_sort, num_experiments);
+        stats avg_sorted_comb = run_average_experiment(array_size, comb_sort, num_experiments);
+        stats avg_sorted_quick = run_average_experiment(array_size, quick_sort, num_experiments);
+
+        // Reverse sorted array experiment
+        stats avg_reverse_sorted_insertion = run_average_experiment(array_size, insertion_sort, num_experiments);
+        stats avg_reverse_sorted_comb = run_average_experiment(array_size, comb_sort, num_experiments);
+        stats avg_reverse_sorted_quick = run_average_experiment(array_size, quick_sort, num_experiments);
+
+        std::cout << "Average Statistics for Random Arrays:\n";
+        std::cout << "Insertion Sort - Comparisons: " << avg_random_insertion.comparison_count << ", Copies: " << avg_random_insertion.copy_count << "\n";
+        std::cout << "Comb Sort - Comparisons: " << avg_random_comb.comparison_count << ", Copies: " << avg_random_comb.copy_count << "\n";
+        std::cout << "Quick Sort - Comparisons: " << avg_random_quick.comparison_count << ", Copies: " << avg_random_quick.copy_count << "\n\n";
+
+        std::cout << "Average Statistics for Sorted Arrays:\n";
+        std::cout << "Insertion Sort - Comparisons: " << avg_sorted_insertion.comparison_count << ", Copies: " << avg_sorted_insertion.copy_count << "\n";
+        std::cout << "Comb Sort - Comparisons: " << avg_sorted_comb.comparison_count << ", Copies: " << avg_sorted_comb.copy_count << "\n";
+        std::cout << "Quick Sort - Comparisons: " << avg_sorted_quick.comparison_count << ", Copies: " << avg_sorted_quick.copy_count << "\n\n";
+
+        std::cout << "Average Statistics for Reverse Sorted Arrays:\n";
+        std::cout << "Insertion Sort - Comparisons: " << avg_reverse_sorted_insertion.comparison_count << ", Copies: " << avg_reverse_sorted_insertion.copy_count << "\n";
+        std::cout << "Comb Sort - Comparisons: " << avg_reverse_sorted_comb.comparison_count << ", Copies: " << avg_reverse_sorted_comb.copy_count << "\n";
+        std::cout << "Quick Sort - Comparisons: " << avg_reverse_sorted_quick.comparison_count << ", Copies: " << avg_reverse_sorted_quick.copy_count << "\n";
     }
     catch (const std::out_of_range& e) {
         std::cerr << "Error: " << e.what() << "\n";
