@@ -3,277 +3,197 @@
 #include <stdexcept>
 #include <stack>
 #include <ctime>
+#include <cstdlib> 
+#include <iterator>
+#define SIZE 1000
 
 struct stats {
     size_t comparison_count = 0;
     size_t copy_count = 0;
 };
 
-template <typename Iterator>
-stats insertion_sort(Iterator begin, Iterator end) {
-    stats result;
-    size_t n = std::distance(begin, end);
-
-    for (Iterator i = std::next(begin); i != end; ++i) {
-        auto key = *i;
-        Iterator j = i;
-
-        while (j != begin && *(std::prev(j)) > key) {
-            ++result.comparison_count;
-            *j = *(std::prev(j));
-            ++result.copy_count;
-            --j;
-        }
-
-        *j = key;
-        ++result.copy_count;
-    }
-
-    return result;
-}
-
-template <typename Iterator>
-stats comb_sort(Iterator begin, Iterator end) {
-    stats result;
-    size_t n = std::distance(begin, end);
-    bool swapped = true;
-    size_t gap = n;
-
-    while (gap > 1 || swapped) {
-        gap = (gap * 10) / 13;
-        if (gap < 1) {
-            gap = 1;
-        }
-
-        swapped = false;
-
-        for (Iterator i = begin; std::distance(i, end) > gap; ++i) {
-            Iterator j = std::next(i, gap);
-            ++result.comparison_count;
-
-            if (*i > *j) {
-                std::swap(*i, *j);
-                swapped = true;
-                ++result.copy_count;
+stats insertion_sort(std::vector<int>& arr) {
+    stats s;
+    int size = arr.size();
+    if (size < 2)
+        return s;
+    for (int i = 1; i < size; ++i) {
+        for (int j = i; j > 0; --j) {
+            ++s.comparison_count;
+            if (arr[j] < arr[j - 1]) {
+                std::swap(arr[j], arr[j - 1]);
+                ++s.copy_count;
+            }
+            else {
+                break;
             }
         }
     }
-
-    return result;
+    return s;
 }
 
-template <typename Iterator>
-Iterator partition(Iterator begin, Iterator end, stats& s) {
-    Iterator pivot = std::prev(end);
-    Iterator i = begin;
+size_t partition(std::vector<int>& arr, size_t low, size_t high, stats& s) {
+    int pivot = arr[high];
+    size_t i = low;
 
-    for (Iterator j = begin; j != std::prev(end); ++j) {
+    for (size_t j = low; j < high; ++j) {
         ++s.comparison_count;
-        if (*j <= *pivot) {
-            std::swap(*i, *j);
+        if (arr[j] <= pivot) {
+            std::swap(arr[i], arr[j]);
             ++s.copy_count;
             ++i;
         }
     }
 
-    std::swap(*i, *pivot);
+    std::swap(arr[i], arr[high]);
     ++s.copy_count;
 
     return i;
 }
 
-template <typename Iterator>
-void quicksort(Iterator begin, Iterator end, stats& s) {
-    std::stack<std::pair<Iterator, Iterator>> stack;
-    stack.push(std::make_pair(begin, end));
+void quicksort(std::vector<int>& arr, size_t low, size_t high, stats& s) {
+    std::stack<std::pair<size_t, size_t>> stack;
+    stack.push(std::make_pair(low, high));
 
     while (!stack.empty()) {
         auto top = stack.top();
         stack.pop();
 
-        Iterator l = top.first;
-        Iterator h = top.second;
+        size_t l = top.first;
+        size_t h = top.second;
 
-        if (l != h) {
-            Iterator pivotIndex = partition(l, h, s);
+        if (l < h) {
+            size_t pivotIndex = partition(arr, l, h, s);
 
-            if (pivotIndex != begin) {
-                stack.push(std::make_pair(l, pivotIndex));
+            if (pivotIndex > 0) {
+                stack.push(std::make_pair(l, pivotIndex - 1));
             }
-            stack.push(std::make_pair(std::next(pivotIndex), h));
+            stack.push(std::make_pair(pivotIndex + 1, h));
         }
     }
 }
 
-template <typename Iterator>
-stats quick_sort(Iterator begin, Iterator end) {
+stats quick_sort(std::vector<int>& arr) {
     stats s;
-    quicksort(begin, end, s);
+    quicksort(arr, 0, arr.size() - 1, s);
     return s;
 }
 
-std::ostream& operator<<(std::ostream& os, const std::vector<int>& arr) {
-    os << "[";
-    for (size_t i = 0; i < arr.size(); ++i) {
-        os << arr[i];
-        if (i < arr.size() - 1) {
-            os << ", ";
+stats comb_sort(std::vector<int>& arr) {
+    stats s;
+    int size = arr.size();
+    if (size < 2)
+        return s;
+    int step = size - 1;
+    bool swaps = true;
+    while (step >= 1 || swaps == true) {
+        swaps = false;
+        for (int i = 0; i < size - step; ++i) {
+            ++s.comparison_count;
+            if (arr[i] > arr[i + step]) {
+                std::swap(arr[i], arr[i + step]);
+                ++s.copy_count;
+                swaps = true;
+            }
         }
-    }
-    os << "]";
-    return os;
+        step = step - 1;
+        if (step < 1 && swaps == true) {
+            step = 1;
+        }
+
+    }return s;
 }
 
-template <typename Iterator>
-Iterator generate_random_array(Iterator begin, Iterator end) {
-    for (auto it = begin; it != end; ++it) {
-        *it = rand();
+std::vector<int> generate_random_array(size_t n) {
+    std::vector<int> result;
+    for (int i = 0; i < n; ++i) {
+        result.push_back(rand() % 100);
     }
-    return begin;
+    return result;
 }
 
-template <typename Iterator>
-Iterator generate_sorted_array(Iterator begin, Iterator end) {
-    int value = 0;
-    for (auto it = begin; it != end; ++it) {
-        *it = value++;
+std::vector<int> generate_sorted_array(size_t n) {
+    std::vector<int> result;
+    for (int i = 0; i < n; ++i) {
+        result.push_back(i);
     }
-    return begin;
+    return result;
 }
 
-template <typename Iterator>
-Iterator generate_reverse_sorted_array(Iterator begin, Iterator end) {
-    int value = static_cast<int>(std::distance(begin, end));
-    for (auto it = begin; it != end; ++it) {
-        *it = value--;
+std::vector<int> generate_inverted_array(size_t n) {
+    std::vector<int> result;
+    for (int i = n - 1; i >= 0; --i) {
+        result.push_back(i);
     }
-    return begin;
-}
-
-template <typename Iterator>
-stats run_experiment(Iterator begin, Iterator end, stats(*sort_function)(Iterator, Iterator)) {
-    std::vector<int> copy(begin, end);
-    return sort_function(copy.begin(), copy.end());
-}
-
-template <typename Iterator>
-stats run_average_experiment(Iterator begin, Iterator end, stats(*sort_function)(Iterator, Iterator), size_t num_experiments) {
-    stats total_stats;
-    srand(static_cast<unsigned int>(time(0)));
-
-    for (size_t i = 0; i < num_experiments; ++i) {
-        generate_random_array(begin, end);
-        total_stats.comparison_count += run_experiment(begin, end, sort_function).comparison_count;
-        total_stats.copy_count += run_experiment(begin, end, sort_function).copy_count;
-    }
-
-    // Calculate averages
-    total_stats.comparison_count /= num_experiments;
-    total_stats.copy_count /= num_experiments;
-
-    return total_stats;
+    return result;
 }
 
 int main() {
-    try {
-        std::vector<int> arr1 = { 5, 2, 9, 1, 5, 6 };
-        std::cout << "Original array: ";
-        for (const auto& elem : arr1) {
-            std::cout << elem << " ";
-        }
-        std::cout << "\n\n";
+    
+    // Insertion sort for 100 random arrays, 1 sorted, and 1 inverted
+    size_t sum_comparison = 0, sum_copy = 0;
 
-        // Insertion sort
-        auto insertion_begin = arr1.begin();
-        auto insertion_end = arr1.end();
-        stats result_insertion = insertion_sort(insertion_begin, insertion_end);
-        std::cout << "Insertion Sort: ";
-        for (const auto& elem : arr1) {
-            std::cout << elem << " ";
-        }
-        std::cout << "\n";
-        std::cout << "Comparison count: " << result_insertion.comparison_count << "\n";
-        std::cout << "Copy count: " << result_insertion.copy_count << "\n\n";
-
-        // Comb sort
-        std::vector<int> arr2 = { 5, 2, 9, 1, 5, 6 };
-        auto comb_begin = arr2.begin();
-        auto comb_end = arr2.end();
-        stats result_comb = comb_sort(comb_begin, comb_end);
-        std::cout << "Comb Sort: ";
-        for (const auto& elem : arr2) {
-            std::cout << elem << " ";
-        }
-        std::cout << "\n";
-        std::cout << "Comparison count: " << result_comb.comparison_count << "\n";
-        std::cout << "Copy count: " << result_comb.copy_count << "\n\n";
-
-        // Quick sort
-        std::vector<int> arr3 = { 5, 2, 9, 1, 5, 6 };
-        auto quick_begin = arr3.begin();
-        auto quick_end = arr3.end();
-        stats result_quick = quick_sort(quick_begin, quick_end);
-        std::cout << "Quick Sort: ";
-        for (const auto& elem : arr3) {
-            std::cout << elem << " ";
-        }
-        std::cout << "\n";
-        std::cout << "Comparison count: " << result_quick.comparison_count << "\n";
-        std::cout << "Copy count: " << result_quick.copy_count << "\n\n";
-
-        const size_t array_sizes[] = { 1000, 2000, 3000, 10000, 25000, 50000, 100000 };
-        const size_t num_experiments = 2;
-
-        for (size_t size : array_sizes) {
-            std::vector<int> arr_random(size);
-            std::vector<int> arr_sorted(size);
-            std::vector<int> arr_reverse_sorted(size);
-
-            // Random array experiment
-            stats avg_random_insertion = run_average_experiment(arr_random.begin(), arr_random.end(), insertion_sort, num_experiments);
-            stats avg_random_comb = run_average_experiment(arr_random.begin(), arr_random.end(), comb_sort, num_experiments);
-            stats avg_random_quick = run_average_experiment(arr_random.begin(), arr_random.end(), quick_sort, num_experiments);
-
-            // Sorted array experiment
-            generate_sorted_array(arr_sorted.begin(), arr_sorted.end());
-            stats avg_sorted_insertion = run_average_experiment(arr_sorted.begin(), arr_sorted.end(), insertion_sort, num_experiments);
-            stats avg_sorted_comb = run_average_experiment(arr_sorted.begin(), arr_sorted.end(), comb_sort, num_experiments);
-            stats avg_sorted_quick = run_average_experiment(arr_sorted.begin(), arr_sorted.end(), quick_sort, num_experiments);
-
-            // Reverse sorted array experiment
-            generate_reverse_sorted_array(arr_reverse_sorted.begin(), arr_reverse_sorted.end());
-            stats avg_reverse_sorted_insertion = run_average_experiment(arr_reverse_sorted.begin(), arr_reverse_sorted.end(), insertion_sort, num_experiments);
-            stats avg_reverse_sorted_comb = run_average_experiment(arr_reverse_sorted.begin(), arr_reverse_sorted.end(), comb_sort, num_experiments);
-            stats avg_reverse_sorted_quick = run_average_experiment(arr_reverse_sorted.begin(), arr_reverse_sorted.end(), quick_sort, num_experiments);
-
-            // Output results for each array type and size
-            std::cout << "Array Size: " << size << "\n";
-            std::cout << "Average Statistics for Random Arrays:\n";
-            std::cout << "Insertion Sort - Comparisons: " << avg_random_insertion.comparison_count << ", Copies: " << avg_random_insertion.copy_count << "\n";
-            std::cout << "Comb Sort - Comparisons: " << avg_random_comb.comparison_count << ", Copies: " << avg_random_comb.copy_count << "\n";
-            std::cout << "Quick Sort - Comparisons: " << avg_random_quick.comparison_count << ", Copies: " << avg_random_quick.copy_count << "\n\n";
-
-            std::cout << "Average Statistics for Sorted Arrays:\n";
-            std::cout << "Insertion Sort - Comparisons: " << avg_sorted_insertion.comparison_count << ", Copies: " << avg_sorted_insertion.copy_count << "\n";
-            std::cout << "Comb Sort - Comparisons: " << avg_sorted_comb.comparison_count << ", Copies: " << avg_sorted_comb.copy_count << "\n";
-            std::cout << "Quick Sort - Comparisons: " << avg_sorted_quick.comparison_count << ", Copies: " << avg_sorted_quick.copy_count << "\n\n";
-
-            std::cout << "Average Statistics for Reverse Sorted Arrays:\n";
-            std::cout << "Insertion Sort - Comparisons: " << avg_reverse_sorted_insertion.comparison_count << ", Copies: " << avg_reverse_sorted_insertion.copy_count << "\n";
-            std::cout << "Comb Sort - Comparisons: " << avg_reverse_sorted_comb.comparison_count << ", Copies: " << avg_reverse_sorted_comb.copy_count << "\n";
-            std::cout << "Quick Sort - Comparisons: " << avg_reverse_sorted_quick.comparison_count << ", Copies: " << avg_reverse_sorted_quick.copy_count << "\n";
-
-            std::cout << "--------------------------------------\n";
-        }
+    for (int i = 0; i < 100; ++i) {
+        std::vector<int> arr = generate_random_array(SIZE);
+        stats tmp = insertion_sort(arr);
+        sum_comparison += tmp.comparison_count;
+        sum_copy += tmp.copy_count;
     }
-    catch (const std::out_of_range& e) {
-        std::cerr << "Error: " << e.what() << "\n";
+    std::vector<int> sorted = generate_sorted_array(SIZE);
+    stats sorted_stats = insertion_sort(sorted);
+    std::vector<int> inverted = generate_inverted_array(SIZE);
+    stats inverted_stats = insertion_sort(inverted);
+
+    std::cout << "Insertion sort: Array Size: " << SIZE << "\n\n";
+    std::cout << "Average Statistics for Random Arrays: " << " Comparisons: " << sum_comparison / 100 << ", Copies: " << sum_copy / 100 << "\n\n";
+    std::cout << "Average Statistics for Sorted Arrays:" << " Comparisons: " << sorted_stats.comparison_count << ", Copies: " << sorted_stats.copy_count << "\n\n";
+    std::cout << "Average Statistics for Reverse Arrays:" << " Comparisons: " << inverted_stats.comparison_count << ", Copies: " << inverted_stats.copy_count << "\n\n";
+        
+    std::cout << "--------------------------------------\n";
+
+    // Quick sort for 100 random arrays, 1 sorted, and 1 inverted
+    {
+        size_t sum_comparison = 0, sum_copy = 0;
+
+        for (int i = 0; i < 100; ++i) {
+            std::vector<int> arr = generate_random_array(SIZE);
+            stats tmp = quick_sort(arr);
+            sum_comparison += tmp.comparison_count;
+            sum_copy += tmp.copy_count;
+        }
+        std::vector<int> sorted = generate_sorted_array(SIZE);
+        stats sorted_stats = quick_sort(sorted);
+        std::vector<int> inverted = generate_inverted_array(SIZE);
+        stats inverted_stats = quick_sort(inverted);
+
+        std::cout << "Quick sort: Array Size: " << SIZE << "\n\n";
+        std::cout << "Average Statistics for Random Arrays: " << "Comparisons: " << sum_comparison / 100 << ", Copies: " << sum_copy / 100 << "\n\n";
+        std::cout << "Average Statistics for Sorted Arrays:" << " Comparisons: " << sorted_stats.comparison_count << ", Copies: " << sorted_stats.copy_count << "\n\n";
+        std::cout << "Average Statistics for Reverse Arrays:" << " Comparisons: " << inverted_stats.comparison_count << ", Copies: " << inverted_stats.copy_count << "\n\n";
+
+        std::cout << "--------------------------------------\n";
     }
-    catch (const std::invalid_argument& e) {
-        std::cerr << "Error: " << e.what() << "\n";
-    }
-    catch (...) {
-        std::cerr << "An unexpected error occurred.\n";
+    // Comb sort for 100 random arrays, 1 sorted, and 1 inverted
+    {
+        size_t sum_comparison = 0, sum_copy = 0;
+
+        for (int i = 0; i < 100; ++i) {
+            std::vector<int> arr = generate_random_array(SIZE);
+            stats tmp = comb_sort(arr);
+            sum_comparison += tmp.comparison_count;
+            sum_copy += tmp.copy_count;
+        }
+        std::vector<int> sorted = generate_sorted_array(SIZE);
+        stats sorted_stats = comb_sort(sorted);
+        std::vector<int> inverted = generate_inverted_array(SIZE);
+        stats inverted_stats = comb_sort(inverted);
+
+        std::cout << "Comb sort: Array Size: " << SIZE << "\n\n";
+        std::cout << "Average Statistics for Random Arrays: " << "Comparisons: " << sum_comparison / 100 << ", Copies: " << sum_copy / 100 << "\n\n";
+        std::cout << "Average Statistics for Sorted Arrays:" << " Comparisons: " << sorted_stats.comparison_count << ", Copies: " << sorted_stats.copy_count << "\n\n";
+        std::cout << "Average Statistics for Reverse Arrays:" << " Comparisons: " << inverted_stats.comparison_count << ", Copies: " << inverted_stats.copy_count << "\n\n";
+
+        std::cout << "--------------------------------------\n";
     }
 
     return 0;
