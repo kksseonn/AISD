@@ -4,7 +4,7 @@
 #include <stack>
 #include <ctime>
 #include <cstdlib> 
-#include <iterator>
+
 #define SIZE 1000
 
 struct stats {
@@ -13,23 +13,23 @@ struct stats {
 };
 
 stats insertion_sort(std::vector<int>& arr) {
-    stats s;
+    stats result;
     int size = arr.size();
     if (size < 2)
-        return s;
+        return result;
     for (int i = 1; i < size; ++i) {
         for (int j = i; j > 0; --j) {
-            ++s.comparison_count;
+            ++result.comparison_count;
             if (arr[j] < arr[j - 1]) {
                 std::swap(arr[j], arr[j - 1]);
-                ++s.copy_count;
+                ++result.copy_count;
             }
             else {
                 break;
             }
         }
     }
-    return s;
+    return result;
 }
 
 size_t partition(std::vector<int>& arr, size_t low, size_t high, stats& s) {
@@ -80,33 +80,34 @@ stats quick_sort(std::vector<int>& arr) {
 }
 
 stats comb_sort(std::vector<int>& arr) {
-    stats s;
-    int size = arr.size();
+    stats result;
+    size_t size = arr.size();
     if (size < 2)
-        return s;
-    int step = size - 1;
-    bool swaps = true;
-    while (step >= 1 || swaps == true) {
-        swaps = false;
-        for (int i = 0; i < size - step; ++i) {
-            ++s.comparison_count;
+        return result;
+
+    double shrink_factor = 1.3; // Шаг уменьшения
+    size_t step = size;
+    bool swapped = true;
+
+    while (step > 1 || swapped) {
+        step = std::max<size_t>(1, static_cast<size_t>(step / shrink_factor));
+        swapped = false;
+        for (size_t i = 0; i + step < size; ++i) {
+            ++result.comparison_count;
             if (arr[i] > arr[i + step]) {
                 std::swap(arr[i], arr[i + step]);
-                ++s.copy_count;
-                swaps = true;
+                ++result.copy_count;
+                swapped = true;
             }
         }
-        step = step - 1;
-        if (step < 1 && swaps == true) {
-            step = 1;
-        }
+    }
 
-    }return s;
+    return result;
 }
 
 std::vector<int> generate_random_array(size_t n) {
     std::vector<int> result;
-    for (int i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         result.push_back(rand() % 100);
     }
     return result;
@@ -114,7 +115,7 @@ std::vector<int> generate_random_array(size_t n) {
 
 std::vector<int> generate_sorted_array(size_t n) {
     std::vector<int> result;
-    for (int i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         result.push_back(i);
     }
     return result;
